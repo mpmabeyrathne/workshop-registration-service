@@ -42,6 +42,7 @@ export default function App() {
   const [userModal, setUserModal] = useState(false);
   const [editingWorkshop, setEditingWorkshop] = useState(null);
   const [filters, setFilters] = useState({});
+  const [users, setUsers] = useState([]);
 
   const [loginForm] = Form.useForm();
   const [workshopForm] = Form.useForm();
@@ -54,6 +55,27 @@ export default function App() {
 
   const errorMessage = (error) =>
     error.response?.data?.message || "Something went wrong";
+
+
+  async function loadUsers() {
+  try {
+    const { data } = await api.get("/users");
+    setUsers(data);
+  } catch (error) {
+    message.error(errorMessage(error));
+  }
+}
+
+async function updateUserRole(userId, role) {
+  try {
+    await api.patch(`/users/${userId}/role`, { role });
+
+    message.success("User role updated");
+    await loadUsers();
+  } catch (error) {
+    message.error(errorMessage(error));
+  }
+}
 
   async function loadWorkshops(nextFilters = filters) {
     try {
@@ -80,11 +102,16 @@ export default function App() {
     }
   }
 
-  useEffect(() => {
-    if (user && !isAdmin) {
-      loadWorkshops({});
-    }
-  }, [user]);
+ useEffect(() => {
+  if (!user) return;
+
+  if (user.role === "ADMIN") {
+    loadUsers();
+  } else {
+    loadWorkshops({});
+  }
+}, [user]);
+  
 
   async function login(values) {
     try {
@@ -195,6 +222,7 @@ export default function App() {
       message.success("User created");
       userForm.resetFields();
       setUserModal(false);
+      await loadUsers();
     } catch (error) {
       message.error(errorMessage(error));
     }
@@ -371,22 +399,62 @@ export default function App() {
         }}
       >
         {isAdmin ? (
-          <Card>
-            <Title level={3}>User Administration</Title>
-            <Text>
-              Create staff accounts and assign permissions.
-            </Text>
+  <Card>
+    <Space
+      style={{
+        width: "100%",
+        justifyContent: "space-between",
+        marginBottom: 20,
+      }}
+    >
+      <Title level={3} style={{ margin: 0 }}>
+        User Administration
+      </Title>
 
-            <div style={{ marginTop: 20 }}>
-              <Button
-                type="primary"
-                onClick={() => setUserModal(true)}
-              >
-                Create User
-              </Button>
-            </div>
-          </Card>
-        ) : (
+      <Button
+        type="primary"
+        onClick={() => setUserModal(true)}
+      >
+        Create User
+      </Button>
+    </Space>
+
+    <Table
+      rowKey="id"
+      dataSource={users}
+      scroll={{ x: 650 }}
+      columns={[
+        {
+          title: "Name",
+          dataIndex: "name",
+        },
+        {
+          title: "Email",
+          dataIndex: "email",
+        },
+        {
+          title: "Role",
+          dataIndex: "role",
+          render: (role, record) => (
+            <Select
+              value={role}
+              style={{ width: 140 }}
+              disabled={record.id === user.id}
+              options={[
+                { label: "Admin", value: "ADMIN" },
+                { label: "Manager", value: "MANAGER" },
+                { label: "Staff", value: "STAFF" },
+              ]}
+              onChange={(newRole) =>
+                updateUserRole(record.id, newRole)
+              }
+            />
+          ),
+        },
+      ]}
+    />
+  </Card>
+) : (
           <>
             <Space
               style={{
