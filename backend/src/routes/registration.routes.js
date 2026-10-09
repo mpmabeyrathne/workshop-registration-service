@@ -2,11 +2,11 @@ import { Router } from "express";
 import { z } from "zod";
 
 import { sequelize } from "../config/database.js";
-
 import {
-  Workshop,
-  Registration
-} from "../models/index.js";
+    Workshop,
+    Registration,
+    User
+  } from "../models/index.js";
 
 import {
   authenticate,
@@ -118,9 +118,21 @@ router.get("/workshops/:id/registrations", async (req, res) => {
     }
 
     const registrations = await Registration.findAll({
-      where: { workshopId: workshop.id },
-      order: [["registeredAt", "DESC"]]
-    });
+        where: { workshopId: workshop.id },
+        include: [
+          {
+            model: User,
+            as: "registeredByUser",
+            attributes: ["id", "name", "email"]
+          },
+          {
+            model: User,
+            as: "cancelledByUser",
+            attributes: ["id", "name", "email"]
+          }
+        ],
+        order: [["registeredAt", "DESC"]]
+      });
 
     return res.json(registrations);
 
