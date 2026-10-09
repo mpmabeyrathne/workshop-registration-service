@@ -6,7 +6,9 @@
     "seed": "node src/seeders/seed.js",
     "test:rbac": "node tests/rbac-test.mjs",
     "test:concurrency": "node tests/concurrency-test.mjs",
-    "test:capacity": "node tests/capacity-test.mjs"
+    "test:capacity": "node tests/capacity-test.mjs",
+    "test:validation": "node tests/validation-test.mjs",
+    "test:capacity-race": "node tests/capacity-race-test.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
