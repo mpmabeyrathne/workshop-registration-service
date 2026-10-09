@@ -413,16 +413,24 @@ export default function App() {
             <Card style={{ marginBottom: 20 }}>
               <Space wrap>
                 <DatePicker.RangePicker
-                  onChange={(_, dateStrings) => {
-                    setFilters((previous) => ({
-                      ...previous,
-                      from: dateStrings[0] || undefined,
-                      to: dateStrings[1]
-                        ? `${dateStrings[1]}T23:59:59`
-                        : undefined,
-                    }));
-                  }}
-                />
+                    allowClear
+                    onChange={(dates, dateStrings) => {
+                      if (!dates || !dates[0] || !dates[1]) {
+                        setFilters((previous) => ({
+                          ...previous,
+                          from: undefined,
+                          to: undefined,
+                        }));
+                        return;
+                      }
+
+                      setFilters((previous) => ({
+                        ...previous,
+                        from: `${dateStrings[0]}T00:00:00`,
+                        to: `${dateStrings[1]}T23:59:59`,
+                      }));
+                    }}
+                  />
 
                 <Select
                   placeholder="Workshop status"
